@@ -9,4 +9,4 @@ To set the server and port, just start the `433-gui.jar` as follows:
 ```
 C:\433-gui.jar 192.168.1.199 5000
 ```
-The next time the `433-gui.jar` starts, it will use this value. To change the server / port, start the `433-gui` again with the right
+The next time the `433-gui.jar` starts, it will use this value. To change the server / port, start the `433-gui` again with the right CLI arguments.
