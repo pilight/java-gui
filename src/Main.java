@@ -152,7 +152,7 @@ public class Main {
 		    				case CONFIG:
 		    					if(json.has("config")) {
 		    						Config.parse(json.getJSONObject("config"));
-		
+
 		    						dlgLoader.update(100, "Building main window...");
 //		     						dlgMain.setOnSettings(new Runnable() {
 //		     							public void run() {

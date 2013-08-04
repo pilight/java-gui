@@ -122,8 +122,18 @@ public class MainDlg {
 						createSwitchElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device.getName(), state);
 					break;
 					case 2:
-						ArrayList<String> values = device.getSettings().get("values"); 
-						createDimmerElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device.getName(), values.toArray(new String[values.size()]), device.getSettings().get("state").get(0).toString());
+						if(new String("on").equals(device.getSettings().get("state").get(0))) {
+							state = true;
+						} else {
+							state = false;
+						}
+						ArrayList<String> values = new ArrayList<String>(); 
+						if(new String("kaku_dimmer").equals(device.getSettings().get("protocol").get(0))) {
+							for(int i=0;i<=15;i++) {
+								values.add(new String().valueOf(i));
+							}
+						}
+						createDimmerElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device.getName(), values.toArray(new String[values.size()]), state, device.getSettings().get("dimlevel").get(0).toString());
 					break;
 					case 3:
 						state = true;
@@ -178,7 +188,6 @@ public class MainDlg {
 	}
 	
 	public void update(JSONObject json) {
-
 		if(json.has("values") && json.has("origin") && json.has("devices") && json.has("type")) {
 			if(new String("config").equals(json.getString("origin"))) {
 				JSONObject values = json.optJSONObject("values");
@@ -213,15 +222,32 @@ public class MainDlg {
 								}
 							break;
 							case 2:
-								JSpinner spinner = (JSpinner)getComponentByName(location, device);
+								JSpinner spinner = (JSpinner)getComponentByName(location, device+"_spinner");
 								vit = values.keys();
 								while(vit.hasNext()) {
 									String key = (String)vit.next().toString();
-									if(new String("state").equals(key)) {
+									if(new String("dimlevel").equals(key)) {
 										ChangeListener stmp = spinner.getChangeListeners()[0];
 										spinner.removeChangeListener(stmp);
 										spinner.setValue(values.getString(key));
 										spinner.addChangeListener(stmp);								
+									}
+								}
+								JToggleButton button1 = (JToggleButton)getComponentByName(location, device+"_button");
+								vit = values.keys();
+								while(vit.hasNext()) {
+									String key = (String)vit.next().toString();
+									if(new String("state").equals(key)) {
+										ActionListener btmp = button1.getActionListeners()[0];
+										button1.removeActionListener(btmp);
+										if(new String("off").equals(values.getString(key))) {
+											button1.setSelected(false);
+											button1.setText("Off");
+										} else {
+											button1.setSelected(true);
+											button1.setText("On");
+										}
+										button1.addActionListener(btmp);
 									}
 								}
 							break;
@@ -287,7 +313,12 @@ public class MainDlg {
 		y++;
 	}
 	
-	private void createDimmerElement(JPanel panel, String lid, String did, String dtext, String values[], String state) {
+	private void createDimmerElement(JPanel panel, String lid, String did, String dtext, String values[], boolean status, String dimlevel) {
+		String state = "Off";
+		if(status) {
+			state = "On ";
+		}
+		
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
 		gbc.gridy = y;
@@ -299,6 +330,23 @@ public class MainDlg {
 		gbc.weightx = 1.0;
 		JLabel label = new JLabel(dtext+":", JLabel.LEFT);
 		panel.add(label, gbc);
+
+		gbc.gridx = 1;
+		gbc.gridy = y;
+		gbc.gridwidth = 1;
+		gbc.gridheight = 1;
+		gbc.insets = EAST_INSETS;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.anchor = GridBagConstraints.LINE_END;
+		gbc.weightx = 1;
+		JToggleButton button = new JToggleButton(state);
+
+		button.setSelected(status);
+		button.addActionListener(new SwitchActionListener(lid, did, status));
+		panel.add(button, gbc);
+		registerComponent(button, lid, did+"_button");
+
+		y++;
 			
 		gbc.gridx = 1;
 		gbc.gridy = y;
@@ -310,10 +358,10 @@ public class MainDlg {
 		gbc.weightx = 0;
 		SpinnerListModel list = new SpinnerListModel(values);
 		JSpinner spinner = new JSpinner(list);
-		spinner.setValue(state);
+		spinner.setValue(dimlevel);
 		spinner.addChangeListener(new DimmerChangeListener(lid, did));
 		panel.add(spinner, gbc);		
-		registerComponent(spinner, lid, did);
+		registerComponent(spinner, lid, did+"_spinner");
 		y++;		
 	}
 	

@@ -24,7 +24,8 @@ public class DimmerChangeListener implements ChangeListener {
 		json.put("message", "send");
 		code.put("location", this.location);
 		code.put("device", this.device);
-		code.put("state", spinner.getValue().toString());
+		code.put("state", "on");
+		code.put("value", spinner.getValue().toString());
 		json.put("code", code);
 		NSocket.write(json.toString());
 	}
