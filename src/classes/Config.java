@@ -43,6 +43,7 @@ public class Config {
 					
 					if(new String("name").equals(dkey)) {
 						location.setName(jdev.getString(dkey));
+					} else if(new String("order").equals(dkey)) {
 					} else {
 
 						try {
@@ -60,6 +61,7 @@ public class Config {
 								
 								if(new String("name").equals(skey)) {
 									device.setName(jset.getString(skey));
+								} else if(new String("order").equals(skey)) {
 								} else {
 
 									try {
