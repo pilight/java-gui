@@ -90,7 +90,7 @@ public class SettingsDlg {
 		frame.setBounds(0, 0, 300, 150);
 		frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.setTitle("433-controller :: Settings");
+		frame.setTitle("pilight");
 		frame.setLocationRelativeTo(null);
 		frame.setAlwaysOnTop(true);
 		//frame.setUndecorated(true);

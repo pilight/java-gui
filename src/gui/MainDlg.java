@@ -60,7 +60,7 @@ public class MainDlg {
 	
 	public void create() {
 		frame = new JFrame();
-		frame.setTitle("433-Controller :: Main");
+		frame.setTitle("pilight");
 		frame.setBounds(0, 0, 240, 320);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.addWindowListener(new WindowListener() {

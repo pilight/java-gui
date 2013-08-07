@@ -79,7 +79,7 @@ public class LoaderDlg {
 		frame.setBounds(0, 0, 300, 100);
 		frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 		frame.getContentPane().setLayout(new BorderLayout());
-		frame.setTitle("433-controller :: Loader");
+		frame.setTitle("pilight");
 		frame.setLocationRelativeTo(null);
 		//frame.setUndecorated(true);
 		frame.addMouseListener(new MouseAdapter() {
