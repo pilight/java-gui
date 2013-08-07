@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 public class Device {
 	private String name;
+	private Integer order;
 	private HashMap<String, ArrayList<String>> settings = new HashMap<String, ArrayList<String>>();
 
 	public String getName() {
@@ -13,6 +14,14 @@ public class Device {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Integer getOrder() {
+		return this.order;
+	}
+
+	public void setOrder(Integer nr) {
+		this.order = nr;
 	}
 
 	public HashMap<String, ArrayList<String>> getSettings() {

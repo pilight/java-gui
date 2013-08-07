@@ -1,9 +1,15 @@
 package classes;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,9 +22,29 @@ public class Config {
 	
 	private static HashMap<String, Location> config = new HashMap<String, Location>();
 	
-	public static HashMap<String, Location> getConfig() {
-		return config;
+	public static Map<String, Location> getConfig() {
+		return sort();
 	}
+	
+    public static <K extends Comparable, V extends Comparable> Map<String, Location> sort() {
+
+        List<Map.Entry<String, Location>> entries = new LinkedList<Map.Entry<String, Location>>(config.entrySet());
+     
+        Collections.sort(entries, new Comparator<Map.Entry<String, Location>>() {
+            @Override
+            public int compare(Entry<String, Location> o1, Entry<String, Location> o2) {
+                return Integer.compare(o1.getValue().getOrder(), o2.getValue().getOrder());
+            }
+        });
+     
+        Map<String, Location> sortedMap = new LinkedHashMap<String, Location>();
+     
+        for(Map.Entry<String, Location> entry: entries) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+     
+        return sortedMap;
+    }	
 	
 	public static void parse(JSONObject jloc) {
 
@@ -44,6 +70,7 @@ public class Config {
 					if(new String("name").equals(dkey)) {
 						location.setName(jdev.getString(dkey));
 					} else if(new String("order").equals(dkey)) {
+						location.setOrder(jdev.getInt(dkey));
 					} else {
 
 						try {
@@ -62,6 +89,7 @@ public class Config {
 								if(new String("name").equals(skey)) {
 									device.setName(jset.getString(skey));
 								} else if(new String("order").equals(skey)) {
+									device.setOrder(jset.getInt(skey));
 								} else {
 
 									try {
@@ -135,5 +163,5 @@ public class Config {
 				}
 			}
 		}
-	}
+	}	
 }
