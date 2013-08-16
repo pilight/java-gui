@@ -110,18 +110,22 @@ public class Main {
 		    			size = 1025;
 		    		}
 		
-		    		if(NSocket.read(size)) {
-		    			try {
-		    				json = new JSONObject(NSocket.getLine());
-		
-		    				if(json.has("message")) {
-		    					message = json.getString("message");
-		    				}
-		    				has_data = true;
-		    			} catch(JSONException e) {
-		    				has_data = false;
-		    			}
-					}
+		    		if(steps != steps.WELCOME) {
+			    		if(NSocket.read(size)) {
+			    			try {
+			    				json = new JSONObject(NSocket.getLine());
+			
+			    				if(json.has("message")) {
+			    					message = json.getString("message");
+			    				}
+			    				has_data = true;
+			    			} catch(JSONException e) {
+			    				has_data = false;
+			    			}
+						}
+		    		} else {
+		    			has_data = true;
+		    		}
 		    		if(has_data) {
 		    			
 		    			if(new String("reject client").equals(message)) {
@@ -133,11 +137,9 @@ public class Main {
 	
 		    			switch(steps) {
 		    				case WELCOME:
-		    					if(new String("accept connection").equals(message)) {
-		    						NSocket.write("{\"message\":\"client gui\"}");
-		    						steps = Steps.IDENTIFY;
-		    						dlgLoader.update(25, "Identifying...");
-		    					}
+		    					NSocket.write("{\"message\":\"client gui\"}");
+		    					steps = Steps.IDENTIFY;
+		    					dlgLoader.update(25, "Identifying...");
 		    				break;
 		    				case IDENTIFY:
 		    					if(new String("accept client").equals(message)) {
