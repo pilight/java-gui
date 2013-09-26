@@ -113,31 +113,16 @@ public class MainDlg {
 				Device device = (Device)dentry.getValue();
 
 				switch(Integer.parseInt(device.getSettings().get("type").get(0))){
+					case 4:
 					case 1:
-						if(new String("on").equals(device.getSettings().get("state").get(0))) {
-							state = true;
-						} else {
-							state = false;
-						}
-						createSwitchElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device.getName(), state);
+						createSwitchElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device);
 					break;
 					case 2:
-						if(new String("on").equals(device.getSettings().get("state").get(0))) {
-							state = true;
-						} else {
-							state = false;
-						}
-						ArrayList<String> values = new ArrayList<String>(); 
-						if(new String("kaku_dimmer").equals(device.getSettings().get("protocol").get(0))) {
-							for(int i=0;i<=15;i++) {
-								values.add(new String().valueOf(i));
-							}
-						}
-						createDimmerElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device.getName(), values.toArray(new String[values.size()]), state, device.getSettings().get("dimlevel").get(0).toString());
+						createDimmerElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device);
 					break;
 					case 3:
 						state = true;
-						createWeatherElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device.getName(), state);
+						createWeatherElement(panel, lentry.getKey().toString(), dentry.getKey().toString(), device);
 					break;
 				}
 			}
@@ -202,6 +187,7 @@ public class MainDlg {
 						String device = (String)devices.get(i).toString();
 						Iterator<?> vit;
 						switch(type) {
+							case 4:
 							case 1:
 								JToggleButton button = (JToggleButton)getComponentByName(location, device);
 								vit = values.keys();
@@ -277,9 +263,9 @@ public class MainDlg {
 		}
 	}
 
-	private void createSwitchElement(JPanel panel, String lid, String did, String dtext, boolean status) {
+	private void createSwitchElement(JPanel panel, String lid, String did, Device device) {
 		String state = "Off";
-		if(status) {
+		if(device.getSettings().get("state").toString().equals("on")) {
 			state = "On ";
 		}
 		
@@ -292,7 +278,7 @@ public class MainDlg {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.anchor = GridBagConstraints.LINE_START;
 		gbc.weightx = 1.0;
-		JLabel label = new JLabel(dtext+":", JLabel.LEFT);
+		JLabel label = new JLabel(device.getName()+":", JLabel.LEFT);
 		panel.add(label, gbc);
 
 		gbc.gridx = 1;
@@ -305,17 +291,17 @@ public class MainDlg {
 		gbc.weightx = 1;
 		JToggleButton button = new JToggleButton(state);
 
-		button.setSelected(status);
-		button.addActionListener(new SwitchActionListener(lid, did, status));
+		button.setSelected(device.getSettings().get("state").toString().equals("on"));
+		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").toString().equals("on")));
 		panel.add(button, gbc);
 		registerComponent(button, lid, did);
 
 		y++;
 	}
 	
-	private void createDimmerElement(JPanel panel, String lid, String did, String dtext, String values[], boolean status, String dimlevel) {
+	private void createDimmerElement(JPanel panel, String lid, String did, Device device) {
 		String state = "Off";
-		if(status) {
+		if(device.getSettings().get("state").toString().equals("on")) {
 			state = "On ";
 		}
 		
@@ -328,7 +314,7 @@ public class MainDlg {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.anchor = GridBagConstraints.LINE_START;
 		gbc.weightx = 1.0;
-		JLabel label = new JLabel(dtext+":", JLabel.LEFT);
+		JLabel label = new JLabel(device.getName()+":", JLabel.LEFT);
 		panel.add(label, gbc);
 
 		gbc.gridx = 1;
@@ -341,13 +327,19 @@ public class MainDlg {
 		gbc.weightx = 1;
 		JToggleButton button = new JToggleButton(state);
 
-		button.setSelected(status);
-		button.addActionListener(new SwitchActionListener(lid, did, status));
+		button.setSelected(device.getSettings().get("state").toString().equals("on"));
+		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").toString().equals("on")));
 		panel.add(button, gbc);
 		registerComponent(button, lid, did+"_button");
 
 		y++;
-			
+		
+		JSONObject json = new JSONObject(device.getSettings().get("settings").get(0));
+		ArrayList<String> values = new ArrayList<String>(); 
+		for(int i=(int)json.getLong("min");i<=(int)json.getLong("max");i++) {
+			values.add(new String().valueOf(i));
+		}
+
 		gbc.gridx = 1;
 		gbc.gridy = y;
 		gbc.gridwidth = 1;
@@ -358,14 +350,16 @@ public class MainDlg {
 		gbc.weightx = 0;
 		SpinnerListModel list = new SpinnerListModel(values);
 		JSpinner spinner = new JSpinner(list);
-		spinner.setValue(dimlevel);
+		spinner.setValue(device.getSettings().get("dimlevel").get(0).toString());
 		spinner.addChangeListener(new DimmerChangeListener(lid, did));
 		panel.add(spinner, gbc);		
 		registerComponent(spinner, lid, did+"_spinner");
 		y++;		
 	}
 	
-	private void createWeatherElement(JPanel panel, String lid, String did, String dtext, boolean status) {
+	private void createWeatherElement(JPanel panel, String lid, String did, Device device) {
+
+		JSONObject json = new JSONObject(device.getSettings().get("settings").get(0));
 
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
@@ -376,84 +370,112 @@ public class MainDlg {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.anchor = GridBagConstraints.LINE_START;
 		gbc.weightx = 1.0;
-		JLabel label = new JLabel(dtext, JLabel.LEFT);
+		JLabel label = new JLabel(device.getName(), JLabel.LEFT);
 		panel.add(label, gbc);
 		y++;
 
-		gbc.gridx = 0;
-		gbc.gridy = y;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.insets = WEST_INSETS;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.LINE_START;
-		gbc.weightx = 1.0;
-		JLabel label1 = new JLabel("- Temparature:", JLabel.LEFT);
-		panel.add(label1, gbc);
+		if(json.getLong("temperature") == 1) {
+			float temperature = 0;
+			if(json.getLong("decimals") > 0) {
+				temperature = Float.parseFloat(device.getSettings().get("temperature").get(0));
+				temperature /= Math.pow(10, json.getLong("decimals"));
+			}
 		
-		gbc.gridx = 1;
-		gbc.gridy = y;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.insets = EAST_INSETS;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.LINE_END;
-		gbc.weightx = 1;
-		JLabel temp = new JLabel("?", JLabel.RIGHT);
-		temp.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(temp, gbc);	
-		registerComponent(temp, lid, did+"_temp");
-		y++;
+			gbc.gridx = 0;
+			gbc.gridy = y;
+			gbc.gridwidth = 1;
+			gbc.gridheight = 1;
+			gbc.insets = WEST_INSETS;
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.LINE_START;
+			gbc.weightx = 1.0;
+			JLabel label1 = new JLabel("- Temparature:", JLabel.LEFT);
+			panel.add(label1, gbc);
+			
+			gbc.gridx = 1;
+			gbc.gridy = y;
+			gbc.gridwidth = 1;
+			gbc.gridheight = 1;
+			gbc.insets = EAST_INSETS;
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.LINE_END;
+			gbc.weightx = 1;
+			JLabel temp;
+			if(json.getLong("decimals") > 0) {
+				temp = new JLabel(new String().valueOf(temperature), JLabel.RIGHT);
+			} else {
+				temp = new JLabel(new String().valueOf(device.getSettings().get("temperature").get(0)), JLabel.RIGHT);
+			}
+			temp.setHorizontalAlignment(SwingConstants.RIGHT);
+			panel.add(temp, gbc);	
+			registerComponent(temp, lid, did+"_temp");
+			y++;
+		}
 
-		gbc.gridx = 0;
-		gbc.gridy = y;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.insets = WEST_INSETS;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.LINE_START;
-		gbc.weightx = 1.0;
-		JLabel fill = new JLabel("- Humidity:", JLabel.LEFT);
-		panel.add(fill, gbc);	
+		if(json.getLong("humidity") == 1) {
+			float humidity = 0;
+			if(json.getLong("decimals") > 0) {
+				humidity = Float.parseFloat(device.getSettings().get("humidity").get(0));
+				humidity /= Math.pow(10, json.getLong("decimals"));
+			}			
+			
+			gbc.gridx = 0;
+			gbc.gridy = y;
+			gbc.gridwidth = 1;
+			gbc.gridheight = 1;
+			gbc.insets = WEST_INSETS;
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.LINE_START;
+			gbc.weightx = 1.0;
+			JLabel fill = new JLabel("- Humidity:", JLabel.LEFT);
+			panel.add(fill, gbc);	
+			
+			gbc.gridx = 1;
+			gbc.gridy = y;
+			gbc.gridwidth = 1;
+			gbc.gridheight = 1;
+			gbc.insets = EAST_INSETS;
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.LINE_END;
+			gbc.weightx = 1;
+			JLabel humi;
+			if(json.getLong("decimals") > 0) {
+				humi = new JLabel(new String().valueOf(humidity), JLabel.RIGHT);
+			} else {
+				humi = new JLabel(new String().valueOf(device.getSettings().get("humidity").get(0)), JLabel.RIGHT);
+			}
+			humi.setHorizontalAlignment(SwingConstants.RIGHT);
+			panel.add(humi, gbc);
+			registerComponent(humi, lid, did+"_humi");
+			y++;
+		}
 		
-		gbc.gridx = 1;
-		gbc.gridy = y;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.insets = EAST_INSETS;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.LINE_END;
-		gbc.weightx = 1;
-		JLabel humi = new JLabel("?", JLabel.RIGHT);
-		temp.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(humi, gbc);
-		registerComponent(humi, lid, did+"_humi");
-		y++;
-		
-		gbc.gridx = 0;
-		gbc.gridy = y;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.insets = WEST_INSETS;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.LINE_START;
-		gbc.weightx = 1.0;
-		JLabel fill1 = new JLabel("- Battery:", JLabel.LEFT);
-		panel.add(fill1, gbc);
-		
-		gbc.gridx = 1;
-		gbc.gridy = y;
-		gbc.gridwidth = 1;
-		gbc.gridheight = 1;
-		gbc.insets = EAST_INSETS;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.LINE_END;
-		gbc.weightx = 1;
-		JLabel batt = new JLabel("?", JLabel.RIGHT);
-		temp.setHorizontalAlignment(SwingConstants.RIGHT);
-		panel.add(batt, gbc);		
-		registerComponent(batt, lid, did+"_batt");		
-		y++;			
+		if(json.getLong("battery") == 1) {
+			gbc.gridx = 0;
+			gbc.gridy = y;
+			gbc.gridwidth = 1;
+			gbc.gridheight = 1;
+			gbc.insets = WEST_INSETS;
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.LINE_START;
+			gbc.weightx = 1.0;
+			JLabel fill1 = new JLabel("- Battery:", JLabel.LEFT);
+			panel.add(fill1, gbc);
+			
+			gbc.gridx = 1;
+			gbc.gridy = y;
+			gbc.gridwidth = 1;
+			gbc.gridheight = 1;
+			gbc.insets = EAST_INSETS;
+			gbc.fill = GridBagConstraints.HORIZONTAL;
+			gbc.anchor = GridBagConstraints.LINE_END;
+			gbc.weightx = 1;
+			JLabel batt = new JLabel(device.getSettings().get("battery").get(0).toString(), JLabel.RIGHT);
+			batt.setHorizontalAlignment(SwingConstants.RIGHT);
+			panel.add(batt, gbc);		
+			registerComponent(batt, lid, did+"_batt");		
+			y++;
+		}
 	}	
 	
 	private void createFill(JPanel panel) {

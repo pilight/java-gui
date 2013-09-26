@@ -33,7 +33,11 @@ public class SwitchActionListener implements ActionListener {
 		json.put("message", "send");
 		code.put("location", this.location);
 		code.put("device", this.device);
-		code.put("state", this.status);
+		if(this.status) {
+			code.put("state", "on");
+		} else {
+			code.put("state", "off");
+		}
 		json.put("code", code);
 		NSocket.write(json.toString());
 	}
