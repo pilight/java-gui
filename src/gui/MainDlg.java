@@ -50,6 +50,7 @@ public class MainDlg {
 
 	private Runnable funcSettings = null;
 	private HashMap componentMap = new HashMap<String,Component>();
+	private Map<String, Long> decimals = new HashMap<String, Long>();
 	
 	public static void main(String[] args) {
 	}
@@ -183,8 +184,10 @@ public class MainDlg {
 				while(lit.hasNext()) {
 					String location = (String)lit.next().toString();
 					JSONArray devices = (JSONArray)locations.optJSONArray(location);
+
 					for(Short i=0; i<devices.length(); i++) {
 						String device = (String)devices.get(i).toString();
+					
 						Iterator<?> vit;
 						switch(type) {
 							case 4:
@@ -242,17 +245,35 @@ public class MainDlg {
 								JLabel lblHumi = (JLabel)getComponentByName(location, device+"_humi");
 								JLabel lblBatt = (JLabel)getComponentByName(location, device+"_batt");
 
-								vit = values.keys();
-								while(vit.hasNext()) {
-									String key = (String)vit.next().toString();
-									if(new String("humidity").equals(key)) {
-										lblHumi.setText(values.getString(key));
+								if(values.optLong("temperature", -999) != -999) {
+									try {
+										float temperature = 0;
+										if(decimals.get(location+'_'+device) > 0) {
+											temperature = Float.parseFloat(new String().valueOf(values.getLong("temperature")));
+											temperature /= Math.pow(10, decimals.get(location+'_'+device));
+											lblTemp.setText(new String().valueOf(temperature));
+										} else {
+											lblTemp.setText(new String().valueOf((int)values.getLong("temperature")));
+										}
+									} catch(NullPointerException e) {
 									}
-									if(new String("battery").equals(key)) {
-										lblBatt.setText(values.getString(key));
+								}
+								if(values.optLong("humidity", -999) != -999) {
+									try {
+										float humidity = 0;
+										if(decimals.get(location+'_'+device) > 0) {
+											humidity /= Math.pow(10, decimals.get(location+'_'+device));
+											lblHumi.setText(new String().valueOf(humidity));
+										} else {
+											lblHumi.setText(new String().valueOf((int)values.getLong("humidity")));
+										}
+									} catch(NullPointerException e) {
 									}
-									if(new String("temperature").equals(key)) {
-										lblTemp.setText(values.getString(key));
+								}
+								if(values.optLong("battery", -1) != -1) {
+									try {
+										lblBatt.setText(new String().valueOf(values.getLong("battery")));
+									} catch(NullPointerException e) {
 									}
 								}
 							break;
@@ -265,7 +286,7 @@ public class MainDlg {
 
 	private void createSwitchElement(JPanel panel, String lid, String did, Device device) {
 		String state = "Off";
-		if(device.getSettings().get("state").toString().equals("on")) {
+		if(device.getSettings().get("state").get(0).toString().equals("on")) {
 			state = "On ";
 		}
 		
@@ -291,8 +312,8 @@ public class MainDlg {
 		gbc.weightx = 1;
 		JToggleButton button = new JToggleButton(state);
 
-		button.setSelected(device.getSettings().get("state").toString().equals("on"));
-		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").toString().equals("on")));
+		button.setSelected(device.getSettings().get("state").get(0).toString().equals("on"));
+		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").get(0).toString().equals("on")));
 		panel.add(button, gbc);
 		registerComponent(button, lid, did);
 
@@ -301,7 +322,7 @@ public class MainDlg {
 	
 	private void createDimmerElement(JPanel panel, String lid, String did, Device device) {
 		String state = "Off";
-		if(device.getSettings().get("state").toString().equals("on")) {
+		if(device.getSettings().get("state").get(0).toString().equals("on")) {
 			state = "On ";
 		}
 		
@@ -327,8 +348,8 @@ public class MainDlg {
 		gbc.weightx = 1;
 		JToggleButton button = new JToggleButton(state);
 
-		button.setSelected(device.getSettings().get("state").toString().equals("on"));
-		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").toString().equals("on")));
+		button.setSelected(device.getSettings().get("state").get(0).toString().equals("on"));
+		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").get(0).toString().equals("on")));
 		panel.add(button, gbc);
 		registerComponent(button, lid, did+"_button");
 
@@ -374,6 +395,8 @@ public class MainDlg {
 		panel.add(label, gbc);
 		y++;
 
+		decimals.put(lid+'_'+did, json.getLong("decimals"));
+		
 		if(json.getLong("temperature") == 1) {
 			float temperature = 0;
 			if(json.getLong("decimals") > 0) {
