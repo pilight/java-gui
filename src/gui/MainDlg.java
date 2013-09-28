@@ -312,6 +312,11 @@ public class MainDlg {
 		gbc.weightx = 1;
 		JToggleButton button = new JToggleButton(state);
 
+		JSONObject json = new JSONObject(device.getSettings().get("settings").get(0));
+		if(json.getLong("readonly") == 1) {
+			button.setEnabled(false);
+		}
+		
 		button.setSelected(device.getSettings().get("state").get(0).toString().equals("on"));
 		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").get(0).toString().equals("on")));
 		panel.add(button, gbc);
@@ -325,7 +330,9 @@ public class MainDlg {
 		if(device.getSettings().get("state").get(0).toString().equals("on")) {
 			state = "On ";
 		}
-		
+
+		JSONObject json = new JSONObject(device.getSettings().get("settings").get(0));
+
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
 		gbc.gridy = y;
@@ -348,14 +355,17 @@ public class MainDlg {
 		gbc.weightx = 1;
 		JToggleButton button = new JToggleButton(state);
 
+		if(json.getLong("readonly") == 1) {
+			button.setEnabled(false);
+		}
+
 		button.setSelected(device.getSettings().get("state").get(0).toString().equals("on"));
 		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").get(0).toString().equals("on")));
 		panel.add(button, gbc);
 		registerComponent(button, lid, did+"_button");
 
 		y++;
-		
-		JSONObject json = new JSONObject(device.getSettings().get("settings").get(0));
+
 		ArrayList<String> values = new ArrayList<String>(); 
 		for(int i=(int)json.getLong("min");i<=(int)json.getLong("max");i++) {
 			values.add(new String().valueOf(i));
@@ -371,6 +381,11 @@ public class MainDlg {
 		gbc.weightx = 0;
 		SpinnerListModel list = new SpinnerListModel(values);
 		JSpinner spinner = new JSpinner(list);
+		
+		if(json.getLong("readonly") == 1) {
+			spinner.setEnabled(false);
+		}		
+		
 		spinner.setValue(device.getSettings().get("dimlevel").get(0).toString());
 		spinner.addChangeListener(new DimmerChangeListener(lid, did));
 		panel.add(spinner, gbc);		
