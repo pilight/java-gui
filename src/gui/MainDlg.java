@@ -192,7 +192,7 @@ public class MainDlg {
 						switch(type) {
 							case 4:
 							case 1:
-								JToggleButton button = (JToggleButton)getComponentByName(location, device);
+								JToggleButton button = (JToggleButton)getComponentByName(location, device+"_button");
 								vit = values.keys();
 								while(vit.hasNext()) {
 									String key = (String)vit.next().toString();
@@ -320,7 +320,7 @@ public class MainDlg {
 		button.setSelected(device.getSettings().get("state").get(0).toString().equals("on"));
 		button.addActionListener(new SwitchActionListener(lid, did, device.getSettings().get("state").get(0).toString().equals("on")));
 		panel.add(button, gbc);
-		registerComponent(button, lid, did);
+		registerComponent(button, lid, did+"_button");
 
 		y++;
 	}
@@ -370,7 +370,7 @@ public class MainDlg {
 		for(int i=(int)json.getLong("min");i<=(int)json.getLong("max");i++) {
 			values.add(new String().valueOf(i));
 		}
-
+		
 		gbc.gridx = 1;
 		gbc.gridy = y;
 		gbc.gridwidth = 1;

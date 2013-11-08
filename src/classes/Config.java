@@ -90,7 +90,7 @@ public class Config {
 									device.setName(jset.getString(skey));
 								} else if(new String("order").equals(skey)) {
 									device.setOrder(jset.getInt(skey));
-								} else {
+								} else if(new String("protocol").equals(skey) == false){
 
 									try {
 
