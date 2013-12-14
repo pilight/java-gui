@@ -75,7 +75,7 @@ public class Main {
 				
 							try {
 								ssdp.send(sendPack);
-								ssdp.setSoTimeout(10);
+								ssdp.setSoTimeout(50);
 								boolean loop = true;
 								while(loop) {
 									DatagramPacket recvPack = new DatagramPacket(new byte[1024], 1024);
