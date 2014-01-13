@@ -218,7 +218,7 @@ public class MainDlg {
 									if(new String("dimlevel").equals(key)) {
 										ChangeListener stmp = spinner.getChangeListeners()[0];
 										spinner.removeChangeListener(stmp);
-										spinner.setValue(values.getString(key));
+										spinner.setValue(new String().valueOf(values.getInt(key)));
 										spinner.addChangeListener(stmp);								
 									}
 								}
@@ -262,6 +262,7 @@ public class MainDlg {
 									try {
 										float humidity = 0;
 										if(decimals.get(location+'_'+device) > 0) {
+											humidity = Float.parseFloat(new String().valueOf(values.getLong("humidity")));
 											humidity /= Math.pow(10, decimals.get(location+'_'+device));
 											lblHumi.setText(new String().valueOf(humidity));
 										} else {
