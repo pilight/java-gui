@@ -149,14 +149,8 @@ public class Main {
         		isConnected = true;
 	    		has_data = false;
 	
-	    		if(steps == Steps.CONFIG) {
-	    			size = 102500;
-	    		} else {
-	    			size = 1025;
-	    		}
-	
 	    		if(steps != steps.WELCOME) {
-		    		if(NSocket.read(size)) {
+		    		if(NSocket.read()) {
 		    			try {
 		    				json = new JSONObject(NSocket.getLine());
 		

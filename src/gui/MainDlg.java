@@ -509,7 +509,10 @@ public class MainDlg {
 			gbc.fill = GridBagConstraints.HORIZONTAL;
 			gbc.anchor = GridBagConstraints.LINE_END;
 			gbc.weightx = 1;
-			JLabel batt = new JLabel(device.getSettings().get("battery").get(0).toString(), JLabel.RIGHT);
+			JLabel batt = new JLabel("", JLabel.RIGHT);
+			if(device.getSettings().containsKey("battery")) {
+				batt.setText(device.getSettings().get("battery").get(0).toString());
+			}
 			batt.setHorizontalAlignment(SwingConstants.RIGHT);
 			panel.add(batt, gbc);		
 			registerComponent(batt, lid, did+"_batt");		

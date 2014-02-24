@@ -86,31 +86,35 @@ public class NSocket {
 		return line;
 	}
 	
-	public static boolean read(int size) {
-		if(size == 0) {
-			size = 1025;
-		}
+	public static boolean read() {
 		try {
 			if(bufferedReader == null) {
-				bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"), size);
+				bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			}
+			int c = 0;
+			int nrdel = 0;
+			StringBuilder response = new StringBuilder();
 			if(bufferedReader.ready()) {
-				if((line = bufferedReader.readLine()) != null) {
-					if(new String("BEAT").equals(line)) {
-						NSocket.beat = new Date().getTime();
-						return false;
-					} else {
-						return true;
+				while((c = bufferedReader.read()) > 0) {
+					response.append((char)c);
+					if(c == 10) {
+						nrdel++;
 					}
-				} else {
-					return false;
+					if(nrdel >= 2) {
+						nrdel = 0;
+						break;
+					}
 				}
-			} else {
-				return false;
+				line = response.toString();
+				if(new String("BEAT\n\n").equals(line)) {
+					NSocket.beat = new Date().getTime();
+					return false;
+				} else {
+					return true;
+				}
 			}
 		} catch(IOException e) {
 			isConnected = false;
-			//Log.printf("Failed to receive messages from server");
 		}
 		return true;
 	}
