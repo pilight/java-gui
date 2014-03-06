@@ -13,6 +13,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,7 +53,8 @@ public class MainDlg {
 
 	private Runnable funcSettings = null;
 	private HashMap componentMap = new HashMap<String,Component>();
-	private Map<String, Long> decimals = new HashMap<String, Long>();
+	private Map<String, Integer> deviceDecimals = new HashMap<String, Integer>();
+	private Map<String, Integer> guiDecimals = new HashMap<String, Integer>();
 	
 	public static void main(String[] args) {
 	}
@@ -90,12 +94,6 @@ public class MainDlg {
 		     }
 		});
 		
-//		JMenuBar jmb = new JMenuBar();
-//		JMenu jmSettings = new JMenu("Settings");
-//		jmSettings.addMenuListener(settingsAction);
-//		jmb.add(jmSettings);
-//		frame.setJMenuBar(jmb);
-		
 		JTabbedPane tabbedPane = new JTabbedPane();
 		tabbedPane.setTabPlacement(JTabbedPane.TOP);
 		JPanel panel = null;
@@ -132,22 +130,6 @@ public class MainDlg {
 		}		
 		frame.add(tabbedPane);
 	}
-	
-//	private MenuListener settingsAction = new MenuListener() {
-//		public void menuSelected(MenuEvent e) {
-//			onSettings();
-//		}
-//		public void menuDeselected(MenuEvent e) { };
-//		public void menuCanceled(MenuEvent e) { };
-//	};
-//	
-//	public void setOnSettings(Runnable func) {
-//		this.funcSettings = func;
-//	}
-//	
-//	public void onSettings() {
-//		this.funcSettings.run();
-//	}		
 	
 	public void close() {
 		frame.dispose();
@@ -245,15 +227,19 @@ public class MainDlg {
 								JLabel lblHumi = (JLabel)getComponentByName(location, device+"_humi");
 								JLabel lblBatt = (JLabel)getComponentByName(location, device+"_batt");
 
+								DecimalFormat decimalFormat = new DecimalFormat();	
+								decimalFormat.setMaximumFractionDigits(guiDecimals.get(location+'_'+device));
+								decimalFormat.setMinimumFractionDigits(guiDecimals.get(location+'_'+device));
+								
 								if(values.optLong("temperature", -999) != -999) {
 									try {
 										float temperature = 0;
-										if(decimals.get(location+'_'+device) > 0) {
+										if(deviceDecimals.get(location+'_'+device) > 0) {
 											temperature = Float.parseFloat(new String().valueOf(values.getLong("temperature")));
-											temperature /= Math.pow(10, decimals.get(location+'_'+device));
-											lblTemp.setText(new String().valueOf(temperature));
+											temperature /= Math.pow(10, deviceDecimals.get(location+'_'+device));
+											lblTemp.setText(new String().valueOf(decimalFormat.format(temperature)));
 										} else {
-											lblTemp.setText(new String().valueOf((int)values.getLong("temperature")));
+											lblTemp.setText(new String().valueOf(decimalFormat.format((int)values.getLong("temperature"))));
 										}
 									} catch(NullPointerException e) {
 									}
@@ -261,12 +247,12 @@ public class MainDlg {
 								if(values.optLong("humidity", -999) != -999) {
 									try {
 										float humidity = 0;
-										if(decimals.get(location+'_'+device) > 0) {
+										if(deviceDecimals.get(location+'_'+device) > 0) {
 											humidity = Float.parseFloat(new String().valueOf(values.getLong("humidity")));
-											humidity /= Math.pow(10, decimals.get(location+'_'+device));
-											lblHumi.setText(new String().valueOf(humidity));
+											humidity /= Math.pow(10, deviceDecimals.get(location+'_'+device));
+											lblHumi.setText(new String().valueOf(decimalFormat.format(humidity)));
 										} else {
-											lblHumi.setText(new String().valueOf((int)values.getLong("humidity")));
+											lblHumi.setText(new String().valueOf(decimalFormat.format((int)values.getLong("humidity"))));
 										}
 									} catch(NullPointerException e) {
 									}
@@ -313,8 +299,7 @@ public class MainDlg {
 		gbc.weightx = 1;
 		JToggleButton button = new JToggleButton(state);
 
-		JSONObject json = new JSONObject(device.getSettings().get("settings").get(0));
-		if(json.getLong("readonly") == 1) {
+		if(Integer.parseInt(device.getSettings().get("gui-readonly").get(0)) == 1) {
 			button.setEnabled(false);
 		}
 		
@@ -331,8 +316,6 @@ public class MainDlg {
 		if(device.getSettings().get("state").get(0).toString().equals("on")) {
 			state = "On ";
 		}
-
-		JSONObject json = new JSONObject(device.getSettings().get("settings").get(0));
 
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
@@ -356,7 +339,7 @@ public class MainDlg {
 		gbc.weightx = 1;
 		JToggleButton button = new JToggleButton(state);
 
-		if(json.getLong("readonly") == 1) {
+		if(Integer.parseInt(device.getSettings().get("gui-readonly").get(0)) == 1) {
 			button.setEnabled(false);
 		}
 
@@ -368,7 +351,7 @@ public class MainDlg {
 		y++;
 
 		ArrayList<String> values = new ArrayList<String>(); 
-		for(int i=(int)json.getLong("min");i<=(int)json.getLong("max");i++) {
+		for(int i=Integer.parseInt(device.getSettings().get("dimlevel-minimum").get(0));i<=Integer.parseInt(device.getSettings().get("dimlevel-maximum").get(0));i++) {
 			values.add(new String().valueOf(i));
 		}
 		
@@ -383,7 +366,7 @@ public class MainDlg {
 		SpinnerListModel list = new SpinnerListModel(values);
 		JSpinner spinner = new JSpinner(list);
 		
-		if(json.getLong("readonly") == 1) {
+		if(Integer.parseInt(device.getSettings().get("gui-readonly").get(0)) == 1) {
 			spinner.setEnabled(false);
 		}		
 		
@@ -396,8 +379,10 @@ public class MainDlg {
 	
 	private void createWeatherElement(JPanel panel, String lid, String did, Device device) {
 
-		JSONObject json = new JSONObject(device.getSettings().get("settings").get(0));
-
+		DecimalFormat decimalFormat = new DecimalFormat();	
+		decimalFormat.setMaximumFractionDigits(Integer.parseInt(device.getSettings().get("gui-decimals").get(0)));
+		decimalFormat.setMinimumFractionDigits(Integer.parseInt(device.getSettings().get("gui-decimals").get(0)));
+		
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
 		gbc.gridy = y;
@@ -411,13 +396,14 @@ public class MainDlg {
 		panel.add(label, gbc);
 		y++;
 
-		decimals.put(lid+'_'+did, json.getLong("decimals"));
+		deviceDecimals.put(lid+'_'+did, Integer.parseInt(device.getSettings().get("device-decimals").get(0)));
+		guiDecimals.put(lid+'_'+did, Integer.parseInt(device.getSettings().get("gui-decimals").get(0)));
 		
-		if(json.getLong("temperature") == 1) {
+		if(device.getSettings().get("gui-show-temperature") != null && Integer.parseInt(device.getSettings().get("gui-show-temperature").get(0)) == 1) {
 			float temperature = 0;
-			if(json.getLong("decimals") > 0) {
+			if(Integer.parseInt(device.getSettings().get("device-decimals").get(0)) > 0) {
 				temperature = Float.parseFloat(device.getSettings().get("temperature").get(0));
-				temperature /= Math.pow(10, json.getLong("decimals"));
+				temperature /= Math.pow(10, Double.parseDouble(device.getSettings().get("device-decimals").get(0)));
 			}
 		
 			gbc.gridx = 0;
@@ -440,10 +426,10 @@ public class MainDlg {
 			gbc.anchor = GridBagConstraints.LINE_END;
 			gbc.weightx = 1;
 			JLabel temp;
-			if(json.getLong("decimals") > 0) {
-				temp = new JLabel(new String().valueOf(temperature), JLabel.RIGHT);
+			if(Integer.parseInt(device.getSettings().get("device-decimals").get(0)) > 0) {
+				temp = new JLabel(new String().valueOf(decimalFormat.format(temperature)), JLabel.RIGHT);
 			} else {
-				temp = new JLabel(new String().valueOf(device.getSettings().get("temperature").get(0)), JLabel.RIGHT);
+				temp = new JLabel(new String().valueOf(Integer.parseInt(device.getSettings().get("temperature").get(0))), JLabel.RIGHT);
 			}
 			temp.setHorizontalAlignment(SwingConstants.RIGHT);
 			panel.add(temp, gbc);	
@@ -451,11 +437,11 @@ public class MainDlg {
 			y++;
 		}
 
-		if(json.getLong("humidity") == 1) {
+		if(device.getSettings().get("gui-show-humidity") != null && Integer.parseInt(device.getSettings().get("gui-show-humidity").get(0)) == 1) {
 			float humidity = 0;
-			if(json.getLong("decimals") > 0) {
+			if(Integer.parseInt(device.getSettings().get("device-decimals").get(0)) > 0) {
 				humidity = Float.parseFloat(device.getSettings().get("humidity").get(0));
-				humidity /= Math.pow(10, json.getLong("decimals"));
+				humidity /= Math.pow(10, Integer.parseInt(device.getSettings().get("device-decimals").get(0)));
 			}			
 			
 			gbc.gridx = 0;
@@ -478,10 +464,10 @@ public class MainDlg {
 			gbc.anchor = GridBagConstraints.LINE_END;
 			gbc.weightx = 1;
 			JLabel humi;
-			if(json.getLong("decimals") > 0) {
-				humi = new JLabel(new String().valueOf(humidity), JLabel.RIGHT);
+			if(Integer.parseInt(device.getSettings().get("device-decimals").get(0)) > 0) {
+				humi = new JLabel(new String().valueOf(decimalFormat.format(humidity)), JLabel.RIGHT);
 			} else {
-				humi = new JLabel(new String().valueOf(device.getSettings().get("humidity").get(0)), JLabel.RIGHT);
+				humi = new JLabel(new String().valueOf(Integer.parseInt(device.getSettings().get("humidity").get(0))), JLabel.RIGHT);
 			}
 			humi.setHorizontalAlignment(SwingConstants.RIGHT);
 			panel.add(humi, gbc);
@@ -489,7 +475,7 @@ public class MainDlg {
 			y++;
 		}
 		
-		if(json.getLong("battery") == 1) {
+		if(device.getSettings().get("gui-show-battery") != null && Integer.parseInt(device.getSettings().get("gui-show-battery").get(0)) == 1) {
 			gbc.gridx = 0;
 			gbc.gridy = y;
 			gbc.gridwidth = 1;
